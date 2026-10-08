@@ -1,40 +1,41 @@
 import test from "node:test";
 import assert from "node:assert";
+import { analisarTriagem, normalizarRelato, resolverNumeroWhatsApp } from "../lib/triagemCore.js";
 
-function normalizar(texto) {
-  return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
+test("triagem trabalhista detecta justa causa e horas extras", () => {
+  const { analise, whatsappUrl } = analisarTriagem({
+    area: "trabalhista",
+    relato: "Fui demitido por justa causa e a empresa não pagou minhas horas extras.",
+    urgencia: "moderada",
+    nome: "Caso Teste",
+    telefone: "11999999999",
+  });
 
-test("Validação do motor de triagem trabalhista", () => {
-  const relato = "Fui demitido por justa causa e a empresa não pagou minhas horas extras.";
-  const relatoNorm = normalizar(relato);
-  
-  const direitos = [];
-  if (relatoNorm.includes("justa causa")) {
-    direitos.push("Reversão de Demissão por Justa Causa");
-  }
-  if (relatoNorm.includes("hora") || relatoNorm.includes("extra")) {
-    direitos.push("Cobrança de Horas Extras");
-  }
-
-  assert.strictEqual(direitos.length, 2);
-  assert.ok(direitos.includes("Reversão de Demissão por Justa Causa"));
-  assert.ok(direitos.includes("Cobrança de Horas Extras"));
+  assert.strictEqual(analise.direitosIdentificados.length, 2);
+  assert.strictEqual(analise.nivelGravidade, "alta");
+  assert.ok(analise.protocolo.startsWith("MC-"));
+  assert.ok(whatsappUrl.startsWith("https://wa.me/"));
 });
 
-test("Validação do motor de triagem previdenciária", () => {
-  const relato = "O INSS negou meu pedido de auxílio-doença mesmo com atestado médico.";
-  const relatoNorm = normalizar(relato);
-  
-  const direitos = [];
-  if (relatoNorm.includes("negad") || relatoNorm.includes("negou") || relatoNorm.includes("indefer")) {
-    direitos.push("Ação Judicial para Concessão de Benefício do INSS");
-  }
-  if (relatoNorm.includes("auxilio") || relatoNorm.includes("doenca")) {
-    direitos.push("Auxílio por Incapacidade Temporária");
-  }
+test("triagem previdenciária detecta benefício negado e auxílio-doença", () => {
+  const { analise } = analisarTriagem({
+    area: "previdenciario",
+    relato: "O INSS negou meu pedido de auxílio-doença mesmo com atestado médico.",
+  });
 
-  assert.strictEqual(direitos.length, 2);
-  assert.ok(direitos.includes("Ação Judicial para Concessão de Benefício do INSS"));
-  assert.ok(direitos.includes("Auxílio por Incapacidade Temporária"));
+  assert.strictEqual(analise.direitosIdentificados.length, 2);
+  assert.strictEqual(analise.nivelGravidade, "alta");
+});
+
+test("triagem sem área ou relato falha com contexto", () => {
+  assert.throws(() => analisarTriagem({ area: "", relato: "" }), /triagem inválida/);
+});
+
+test("normalização remove acentos para casamento de sinais", () => {
+  assert.ok(normalizarRelato("ASSÉDIO com pressão").includes("assedio"));
+});
+
+test("número do WhatsApp usa env quando configurado", () => {
+  assert.strictEqual(resolverNumeroWhatsApp({ WHATSAPP_NUMBER: "5511888888888" }), "5511888888888");
+  assert.strictEqual(resolverNumeroWhatsApp({}), "5511999999999");
 });
