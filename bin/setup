@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+# Setup idempotente: pode rodar N vezes em maquina limpa.
+set -eu
+
+exigir_node() {
+  if ! command -v node >/dev/null 2>&1; then
+    echo "ERRO: node >=20 nao encontrado. Instale https://nodejs.org" >&2
+    exit 1
+  fi
+  node -e "const m=process.versions.node.split('.')[0]; if(Number(m)<20){console.error('ERRO: node '+process.versions.node+' < 20');process.exit(1)}"
+}
+
+main() {
+  exigir_node
+  npm ci --no-audit --no-fund
+  npm run typecheck
+  npm test
+}
+
+main "$@"

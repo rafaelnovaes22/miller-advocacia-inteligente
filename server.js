@@ -15,23 +15,31 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Rota de Health Check
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 app.get("/health", (req, res) => {
   res.json({
     status: "ok",
     service: "miller-costa-inteligencia-juridica",
     uptime: process.uptime(),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 // Motor de Triagem Jurídica Inteligente (lógica em lib/triagemCore.js,
 // compartilhada com a serverless function api/triagem.js da Vercel)
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 app.post("/api/triagem", (req, res) => {
   const { area, relato, urgencia, nome, telefone } = req.body ?? {};
 
   if (!area || !relato) {
     return res.status(400).json({
-      error: "Área e relato do caso são obrigatórios para a análise preliminar."
+      error: "Área e relato do caso são obrigatórios para a análise preliminar.",
     });
   }
 
@@ -44,12 +52,14 @@ app.post("/api/triagem", (req, res) => {
       telefone,
       whatsappNumero: resolverNumeroWhatsApp(process.env),
     });
-    console.log(JSON.stringify({
-      event: "triagem_concluida",
-      protocolo: resultado.analise.protocolo,
-      area,
-      gravidade: resultado.analise.nivelGravidade,
-    }));
+    console.log(
+      JSON.stringify({
+        event: "triagem_concluida",
+        protocolo: resultado.analise.protocolo,
+        area,
+        gravidade: resultado.analise.nivelGravidade,
+      })
+    );
     return res.json(resultado);
   } catch (err) {
     console.log(JSON.stringify({ event: "triagem_falhou", area, detalhe: String(err?.message ?? err) }));
