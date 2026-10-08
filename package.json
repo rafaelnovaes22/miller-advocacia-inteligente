@@ -1,0 +1,15 @@
+{
+  "name": "miller-costa-inteligencia-juridica",
+  "version": "1.0.0",
+  "description": "Portal Institucional e Triagem com Inteligência Jurídica para Miller Costa Advogados",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5"
+  }
+}
