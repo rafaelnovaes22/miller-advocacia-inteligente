@@ -1,4 +1,4 @@
-# Miller Costa Advogados & BAM Inteligência Jurídica
+# Miller Costa Advogados Associados
 
 Portal institucional de alta conversão e triagem jurídica com inteligência artificial para o escritório Miller Costa Advogados Associados.
 
